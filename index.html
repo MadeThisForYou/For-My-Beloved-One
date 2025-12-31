@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>I Love You Haeden.</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cardo&display=swap');
+
+  /* ================= With Love, Jovaine ================== */
+  :root {
+    --size: 10vmin;
+    --grad-size: calc(var(--size) / 3);
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #000000;
+    font-family: 'Cardo';
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+
+  .wrapper {
+    width: var(--size);
+    height: var(--size);
+    font-size: var(--size);
+    transform: rotateX(-45deg);
+    transform-style: preserve-3d;
+    position: relative;
+  }
+
+  .flower {
+    width: var(--size);
+    height: var(--size);
+    animation: rotate-flower 10s linear infinite;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+
+  .flower:before {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 95%;
+    height: 95%;
+    top: 0; right: 0; bottom: 0; left: 0;
+    margin: auto;
+    background: hsl(100, 40%, 60%);
+    border-radius: 50%;
+    transform: rotateX(90deg);
+    animation: rotate-hue 5s infinite;
+  }
+
+  .petal {
+    position: absolute;
+    z-index: 20;
+    bottom: 80%;
+    left: calc(-1 * var(--size));
+    transform-style: preserve-3d;
+    transform-origin: bottom;
+  }
+
+  .box {
+    width: calc(var(--size) * 3);
+    transform-style: preserve-3d;
+    transform-origin: bottom;
+    animation: rotate-box 12s infinite;
+  }
+
+  .shape {
+    width: 0.5em;
+    height: 0.5em;
+    margin: auto;
+    background: currentColor;
+    box-shadow:
+      0.5em 0 0 0,
+      1em 0 0 0,
+      -1em 0 0 0,
+      -0.5em 0 0 0;
+    border-radius: 50%;
+    animation: rotate-hue 5s infinite;
+  }
+
+  .happy-message {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #ffffff;
+    text-shadow: 0 0 5px #6ab43a;
+    text-align: center;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .happy-message.visible {
+    opacity: 1;
+  }
+
+  @keyframes rotate-box {
+    0%   { transform: rotateX(3.5deg); }
+    15%  { transform: rotateX(3.5deg); }
+    50%  { transform: rotateX(-7deg); }
+    80%  { transform: rotateX(-7deg); }
+    100% { transform: rotateX(3.5deg); }
+  }
+
+  @keyframes rotate-flower {
+    100% {
+      transform: rotateY(360deg);
+    }
+  }
+
+  @keyframes rotate-hue {
+    100% {
+      filter: hue-rotate(360deg);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="flower"></div>
+</div>
+<div class="happy-message" id="happyMessage">Happy Mensive</div>
+
+<audio id="bgmusic" loop autoplay>
+  <source src="song.mp3" type="audio/mpeg" />
+</audio>
+
+<script>
+  console.clear();
+
+  const doc = document;
+  const flower = doc.querySelector('.flower');
+  const happyMessage = doc.getElementById('happyMessage');
+
+  const maxParts = 20;
+  const maxPetals = 6;
+  const partsFontStep = 25 / maxParts;
+  const huetStep = 150 / maxParts;
+
+  const boxAnimationDuration = 12000; 
+  const closedStart = 0.50 * boxAnimationDuration; 
+  const closedEnd = 0.80 * boxAnimationDuration;
+
+  let animationStartTime = null;
+
+  createFlower();
+  startAnimationWatcher();
+
+  function createFlower() {
+    const angle = 360 / maxPetals;
+    for(let i = 0; i < maxPetals; i++) {
+      const petal = createPetal();
+      const currAngle = angle * i + 'deg';
+      const transform = `transform: rotateY(${currAngle}) rotateX(-30deg) translateZ(9vmin)`;
+      petal.setAttribute('style', transform);
+      flower.appendChild(petal);
+    }
+  }
+
+  function createPetal() {
+    let box = createBox(null, 0);
+
+    const petal = doc.createElement('div');
+    petal.classList.add('petal');
+
+    for(let i = 1; i <= maxParts; i++) {
+      const newBox = createBox(box, i);
+      box = newBox;
+    }
+
+    petal.appendChild(box);
+    return petal;
+  }
+
+  function createBox(box, pos) {
+    let fontSize = partsFontStep * (maxParts - pos) + 'vmin';
+    const half = maxParts / 2;
+    let bright = 50;
+
+    if (pos < half + 1) {
+      fontSize = partsFontStep * pos + 'vmin';
+    } else {
+      bright = 10 + 40 / half * (maxParts - pos);
+    }
+
+    const color = `hsl(${huetStep * pos}, 100%, ${bright}%)`;
+
+    const newShape = doc.createElement('div');
+    newShape.classList.add('shape');
+
+    const newBox = doc.createElement('div');
+    newBox.classList.add('box');
+    newBox.style.color = color;
+    newBox.style.fontSize = fontSize;
+
+    if(box) newBox.appendChild(box);
+
+    newBox.appendChild(newShape);
+
+    return newBox;
+  }
+
+  function startAnimationWatcher() {
+    animationStartTime = performance.now();
+    requestAnimationFrame(checkAnimationFrame);
+  }
+
+function checkAnimationFrame() {
+  const elapsed = (performance.now() - animationStartTime) % boxAnimationDuration;
+
+  const isPetalsClosed = (elapsed <= 2000 || elapsed >= 10500);
+
+  if (isPetalsClosed) {
+    if (!happyMessage.classList.contains('visible')) {
+      happyMessage.classList.add('visible');
+    }
+  } else {
+    if (happyMessage.classList.contains('visible')) {
+      happyMessage.classList.remove('visible');
+    }
+  }
+
+  requestAnimationFrame(checkAnimationFrame);
+}
+
+document.addEventListener('click', () => {
+const music = document.getElementById('bgmusic');
+music.play().catch(error => {
+console.log('Audio tidak dapat diputar otomatis:', error);
+});
+}, { once: true });
+  
+</script>
+
+</body>
+</html>
